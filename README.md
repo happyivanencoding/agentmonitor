@@ -1,12 +1,14 @@
 # Agent Monitor
 
-## 0.5.2 — per-Request plans and tool backfill
+## 0.5.4 — reliable capture and native task progress
 
 Remote entry example: **https://monitor.example.com**. Same-machine browser: `http://127.0.0.1:43218`. The real public hostname is deployment-specific and stays in local configuration. Open the configured remote URL, sign in through the owner-only Cloudflare Access application, then use **连接与设置 → 安装 / 添加到主屏幕**. The phone version is an installable PWA, not an APK.
 
 Canonical source repository: `https://github.com/happyivanencoding/agentmonitor`. See [repository and privacy policy](docs/REPOSITORY.md). Agent Monitor code changes are expected to be committed and pushed to `origin/main` as part of the same development task.
 
-0.5.2 fixes the next live-progress gap: every user message that actually triggers execution must create its **own** AgentDock Task/Steps, even when it is a short continuation such as “测试一下” or “再看看”. The browser observer can also re-read the exact current ChatGPT conversation mapping to backfill `task_manage` and ordinary AgentDock tool events for the current user-message ID, covering interruption/alternate transport paths where the live stream itself does not expose those frames. While a Request is still responding and no plan has arrived yet, the UI says **等待执行计划**; observed execution without a plan says **未认领计划**; **无执行计划** is reserved for completed requests that truly did not execute anything.
+0.5.4 fixes the observed browser capture failure and makes native plans usable without ACP. **工作总览** and **任务看板** now expose expandable local Task steps independently of browser attribution. Paired ChatGPT tabs use exact message IDs, long causal ancestry, authenticated mapping recovery, canonical connector tool paths and durable event delivery. An exact checkpoint can associate a Task with a Request, explicitly labeled as participation rather than creation; reading another Task cannot claim it. Settings show actual Request/tool ingress and capture errors instead of equating page heartbeat with successful capture. See [0.5.4 acceptance](docs/VERIFICATION_0_5_4.md).
+
+The older 0.5.2 policy remains: every user message that actually triggers execution must create its **own** AgentDock Task/Steps, even when it is a short continuation such as “测试一下” or “再看看”. The browser observer can also re-read the exact current ChatGPT conversation mapping to backfill `task_manage` and ordinary AgentDock tool events for the current user-message ID, covering interruption/alternate transport paths where the live stream itself does not expose those frames. While a Request is still responding and no plan has arrived yet, the UI says **等待执行计划**; observed execution without a plan says **未认领计划**; **无执行计划** is reserved for completed requests that truly did not execute anything.
 
 0.5.1 fixes the first live Chrome Request-capture blocker. The unpacked extension had referenced `extractor.cjs` as a manifest content script; current Chromium/Chrome did not inject that content-script group. The browser runtime now uses `extractor.js`, while Node tests load that same source through a test helper. The settings page also distinguishes **extension background heartbeat** from a genuinely live **ChatGPT page observer**, so a connected background worker no longer falsely implies Request capture is working.
 
@@ -20,7 +22,7 @@ Attention items can be **归档** from the overview row or Agent detail. This is
 
 ChatGPT web attribution is a first-class setup flow in the Windows app. After the bundled Chrome/Edge extension is loaded and paired once, its popup does not need to stay open: each tab reports its exact `conversation_id`, each user-message ID, and structured AgentDock invocation/result metadata. Direct `read_file`, `file_edit`, `exec_command`, `task_manage` and other AgentDock tools can therefore belong to a Request without ACP. ACP results still require exact ACP/thread identity before Monitor joins them to Codex. The extension does not copy full transcripts, tool stdout or arbitrary command bodies into Monitor storage.
 
-The **任务看板** now leads with Request progress. An execution Request may reference one initial AgentDock Task plus zero or more supplemental Tasks created when the model discovers necessary extra work. Monitor merges all of those plan segments and shows completed/total steps, the current step and revision count. The older AgentDock/Monitor Task timeline remains below it for history and uncaptured legacy work.
+The **任务看板** exposes both unassigned native plans and attributed Request progress. Native plans do not require an ACP Agent or a browser binding. An execution Request may reference one initial AgentDock Task plus zero or more supplemental Tasks created when the model discovers necessary extra work. Monitor merges all of those plan segments and shows completed/total steps, the current step and revision count. The older AgentDock/Monitor Task timeline remains below it for history and uncaptured legacy work.
 
 The primary work view uses **project folder → ChatGPT conversation → Request → Steps / Execution**. The Agent directory and global execution timeline still preserve their lower-level **project → conversation / Task → Agent** hierarchy for ACP/Codex evidence. Project sections can be collapsed as a whole; conversation/task groups are collapsed by default and expand to their individual ACP/Codex agents only when needed. This keeps large histories readable without losing the exact underlying agents.
 
@@ -37,25 +39,25 @@ The shared collector connects ACP `remote_session_id` to the exact Codex thread 
 
 Six pages provide work overview, timelines, process inventory, observed token usage, a project/time task board, and connection/setup controls. The app includes light/dark themes, a tray menu, optional current-user startup, explicit fallback bindings and a local observation journal.
 
-**Important limitation:** the bundled extension must still be loaded and paired once in the desktop browser because Chrome/Edge do not let a normal desktop app silently install an unpacked extension. After that one-time browser action, attribution is automatic. Phone ChatGPT conversations and uninstrumented browsers cannot be observed by this Windows extension. Nothing guesses attribution from timestamps, project paths or the shared AgentDock parent directory.
+**Important limitation:** the bundled extension must still be loaded and paired once in the desktop browser because Chrome/Edge do not let a normal desktop app silently install an unpacked extension. After that one-time browser action, attribution is automatic. Phone/native ChatGPT messages and uninstrumented or unopened browser conversations cannot be observed directly by this Windows extension. Their local AgentDock Tasks can still show live steps under 本机执行计划, with unknown conversation association stated explicitly. Nothing guesses attribution from timestamps, project paths or the shared AgentDock parent directory.
 
 ## Install and use
 
 Build output:
 
 ```text
-src-tauri\target\release\bundle\nsis\Agent Monitor_0.5.2_x64-setup.exe
+src-tauri\target\release\bundle\nsis\Agent Monitor_0.5.4_x64-setup.exe
 ```
 
 Run the per-user installer, then open **Agent Monitor** from the Windows Start menu. No business-project changes are needed. WebView2 is the desktop rendering runtime. This local installer is unsigned; it is not a claim of code-signed public distribution.
 
 The installed app also serves the packaged web/PWA assets on loopback port 43218. The first snapshot may take several seconds. Subsequent collections run after a 2.5-second interval; the actual cadence includes collection time. The overview initially shows current work and the last 24 hours; **全部记录** exposes older work in the monitored collection. Click an Agent to inspect its IDs, status evidence, tool timeline, host and task association.
 
-Closing the window leaves Monitor in the system tray. Use **Quit Agent Monitor** in its tray menu to stop it. Automatic Windows login startup is controlled in **连接与设置**. It is enabled on this remote-monitoring deployment; other installations remain opt-in. The installed collector is currently left running in the tray. See [0.5 Request/dynamic-plan verification](docs/VERIFICATION_0_5.md), [0.4 task/stale-cleanup verification](docs/VERIFICATION_0_4.md), [0.3 attribution verification](docs/VERIFICATION_0_3.md), and the earlier [0.2 release acceptance](docs/VERIFICATION_0_2.md).
+Closing the window leaves Monitor in the system tray. Use **Quit Agent Monitor** in its tray menu to stop it. Automatic Windows login startup is controlled in **连接与设置**. It is enabled on this remote-monitoring deployment; other installations remain opt-in. The installed collector is currently left running in the tray. See [0.5.4 capture/native-plan verification](docs/VERIFICATION_0_5_4.md), [0.5 Request/dynamic-plan verification](docs/VERIFICATION_0_5.md), [0.4 task/stale-cleanup verification](docs/VERIFICATION_0_4.md), [0.3 attribution verification](docs/VERIFICATION_0_3.md), and the earlier [0.2 release acceptance](docs/VERIFICATION_0_2.md).
 
 ## Enable automatic ChatGPT attribution
 
-Open **连接与设置 → ChatGPT 自动归属**. Choose **打开 Chrome 扩展页** or **打开 Edge 扩展页**; Monitor opens both the browser's extension manager and the exact bundled extension folder. Enable developer mode, choose **加载已解压的扩展程序**, select that folder, then copy the pairing key into the extension popup once. Refresh ChatGPT tabs that were already open. From then on each new user message becomes a Request and structured AgentDock activity is attached to that exact Request without opening the popup again.
+Open **连接与设置 → ChatGPT 自动归属**. Choose **打开 Chrome 扩展页** or **打开 Edge 扩展页**; Monitor opens both the browser's extension manager and the exact bundled extension folder. Enable developer mode, choose **加载已解压的扩展程序**, select that folder, then copy the pairing key into the extension popup once. The extension injects already-open ChatGPT tabs after pairing or an extension update; the popup need not stay open. Each subsequently observed user message becomes a Request and structured AgentDock activity is attached to that exact Request without opening the popup again.
 
 For ordinary AgentDock tools, Monitor records only safe invocation metadata such as tool name, action and bounded path/project hints; it does not persist tool output or arbitrary command bodies. ACP attribution remains stricter: only recognized structured ACP results with exact IDs prove a launched Agent. When ACP evidence is unavailable, use the Agent's **手动绑定（兜底）** action.
 

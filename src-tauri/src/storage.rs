@@ -178,12 +178,12 @@ pub fn observe_request_tool(path: &Path, input: &RequestToolInput) -> Result<Val
     let args_summary = input.args_summary.as_deref().map(|s| clipped_chars(s, 1200));
     if input.phase == "started" {
         c.execute(
-            "INSERT INTO request_tools(request_id,invocation_id,tool_name,action,args_summary,project_hint,entity_id,task_id,status,started_at,finished_at,ok) VALUES(?,?,?,?,?,?,?,?,?, ?,NULL,NULL) ON CONFLICT(request_id,invocation_id) DO UPDATE SET tool_name=excluded.tool_name,action=excluded.action,args_summary=excluded.args_summary,project_hint=COALESCE(excluded.project_hint,request_tools.project_hint),entity_id=COALESCE(excluded.entity_id,request_tools.entity_id),task_id=COALESCE(excluded.task_id,request_tools.task_id),status='running'",
+            "INSERT INTO request_tools(request_id,invocation_id,tool_name,action,args_summary,project_hint,entity_id,task_id,status,started_at,finished_at,ok) VALUES(?,?,?,?,?,?,?,?,?, ?,NULL,NULL) ON CONFLICT(request_id,invocation_id) DO UPDATE SET tool_name=excluded.tool_name,action=excluded.action,args_summary=excluded.args_summary,project_hint=COALESCE(excluded.project_hint,request_tools.project_hint),entity_id=COALESCE(excluded.entity_id,request_tools.entity_id),task_id=COALESCE(excluded.task_id,request_tools.task_id),status=CASE WHEN request_tools.finished_at IS NULL THEN 'running' ELSE request_tools.status END",
             params![request_id,input.invocation_id,input.tool_name,action,args_summary,project_hint,entity_id,task_id,"running",at],
         ).map_err(|e| e.to_string())?;
     } else {
         c.execute(
-            "INSERT INTO request_tools(request_id,invocation_id,tool_name,action,args_summary,project_hint,entity_id,task_id,status,started_at,finished_at,ok) VALUES(?,?,?,?,?,?,?,?,?, ?,?,?) ON CONFLICT(request_id,invocation_id) DO UPDATE SET action=COALESCE(excluded.action,request_tools.action),args_summary=COALESCE(excluded.args_summary,request_tools.args_summary),project_hint=COALESCE(excluded.project_hint,request_tools.project_hint),entity_id=COALESCE(excluded.entity_id,request_tools.entity_id),task_id=COALESCE(excluded.task_id,request_tools.task_id),status=excluded.status,finished_at=excluded.finished_at,ok=excluded.ok",
+            "INSERT INTO request_tools(request_id,invocation_id,tool_name,action,args_summary,project_hint,entity_id,task_id,status,started_at,finished_at,ok) VALUES(?,?,?,?,?,?,?,?,?, ?,?,?) ON CONFLICT(request_id,invocation_id) DO UPDATE SET action=COALESCE(excluded.action,request_tools.action),args_summary=COALESCE(excluded.args_summary,request_tools.args_summary),project_hint=COALESCE(excluded.project_hint,request_tools.project_hint),entity_id=COALESCE(excluded.entity_id,request_tools.entity_id),task_id=COALESCE(excluded.task_id,request_tools.task_id),status=excluded.status,finished_at=COALESCE(request_tools.finished_at,excluded.finished_at),ok=COALESCE(excluded.ok,request_tools.ok)",
             params![request_id,input.invocation_id,input.tool_name,action,args_summary,project_hint,entity_id,task_id,if input.ok==Some(false){"failed"}else{"completed"},at,at,input.ok.map(|v|if v{1}else{0})],
         ).map_err(|e| e.to_string())?;
     }
@@ -603,6 +603,19 @@ mod tests {
         observe_request_tool(&db,&make("inv-1","tsk_initial")).unwrap();observe_request_tool(&db,&make("inv-2","tsk_supplement")).unwrap();
         let rows=chat_requests(&open(&db).unwrap()).unwrap();assert_eq!(rows.len(),1);assert_eq!(rows[0]["agentdockTaskId"],"tsk_initial");
         let ids=rows[0]["tools"].as_array().unwrap().iter().filter_map(|t|t["taskId"].as_str()).collect::<Vec<_>>();assert_eq!(ids,vec!["tsk_initial","tsk_supplement"]);
+        let _=std::fs::remove_dir_all(p);
+    }
+
+    #[test]
+    fn replayed_start_never_reopens_a_finished_tool() {
+        let p=std::env::temp_dir().join(format!("agentmonitor-replay-test-{}",uuid::Uuid::new_v4()));
+        init(&p).unwrap();let db=p.join("monitor.sqlite");
+        let mut input=RequestToolInput{conversation_url:"https://chatgpt.com/c/11111111-1111-4111-8111-111111111111".into(),conversation_title:"Fixture".into(),user_message_id:"user-repeat".into(),user_message_text:"Build".into(),invocation_id:"inv-repeat".into(),tool_name:"AgentDock.exec_command".into(),action:None,args_summary:None,project_hint:None,entity_id:None,task_id:None,phase:"completed".into(),ok:Some(true)};
+        observe_request_tool(&db,&input).unwrap();
+        let before=chat_requests(&open(&db).unwrap()).unwrap()[0]["tools"][0].clone();
+        input.phase="started".into();observe_request_tool(&db,&input).unwrap();
+        let after=chat_requests(&open(&db).unwrap()).unwrap()[0]["tools"][0].clone();
+        assert_eq!(after["status"],"completed");assert_eq!(after["finishedAt"],before["finishedAt"]);
         let _=std::fs::remove_dir_all(p);
     }
 

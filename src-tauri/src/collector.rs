@@ -569,7 +569,12 @@ impl Collector {
             let mut current_step: Option<String> = None;
             for tid in &task_ids {
                 if let Some(task) = tasks.iter().find(|t| t["id"].as_str() == Some(tid.as_str())) {
-                    plans.push(task.clone());
+                    let mut linked = task.clone();
+                    let observations = request["tools"].as_array();
+                    let created = observations.map(|tools| tools.iter().any(|tool| tool["taskId"].as_str() == Some(tid.as_str()) && tool["action"].as_str() == Some("create"))).unwrap_or(false);
+                    let checkpointed = observations.map(|tools| tools.iter().any(|tool| tool["taskId"].as_str() == Some(tid.as_str()) && tool["action"].as_str() == Some("checkpoint"))).unwrap_or(false);
+                    linked["requestRelation"] = json!(if created {"created"} else if checkpointed {"checkpointed"} else {"observed"});
+                    plans.push(linked);
                     if project_name.is_none() { project_name = task["project"].as_str().filter(|p| !p.is_empty()).map(str::to_owned); }
                     last_activity = last_activity.max(task["updatedAt"].as_i64().unwrap_or(0));
                     execution_live |= task["status"].as_str() == Some("active");
@@ -619,7 +624,7 @@ impl Collector {
             request["status"] = json!(if execution_live {"active"} else if response_done {"completed"} else {"responding"});
             let has_execution = request["tools"].as_array().map(|x| !x.is_empty()).unwrap_or(false) || !request["agentIds"].as_array().unwrap_or(&Vec::new()).is_empty();
             let has_plan = request["plans"].as_array().map(|x| !x.is_empty()).unwrap_or(false);
-            request["progressProtocol"] = json!(if !has_execution {"not-needed"} else if has_plan {"claimed"} else {"unclaimed"});
+            request["progressProtocol"] = json!(if has_plan {"claimed"} else if has_execution {"unclaimed"} else {"not-needed"});
         }
         let mut conversation_projects = HashMap::<String,String>::new();
         for request in &requests {

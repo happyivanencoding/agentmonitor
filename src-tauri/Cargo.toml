@@ -1,6 +1,6 @@
 [package]
 name = "agent-monitor"
-version = "0.5.2"
+version = "0.5.4"
 description = "Local-first Agent workflow observability"
 authors = ["Agent Monitor contributors"]
 edition = "2021"

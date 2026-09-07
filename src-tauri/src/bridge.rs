@@ -237,9 +237,13 @@ pub fn start(state: Shared) {
                     if let Some(version) = value["extensionVersion"].as_str().filter(|v| v.len() <= 32) {
                         s["extensionVersion"] = json!(version);
                     }
+                    if let Some(error) = value["captureError"].as_str().filter(|v| v.len() <= 200) {
+                        s["captureError"] = json!(error);
+                    }
                     if let Some(observer) = value["pageObserver"].as_str().filter(|v| v.len() <= 80) {
                         s["pageObserver"] = json!(observer);
                         s["lastPageObserverSeen"] = json!(at);
+                        if observer != "observer-ready" { s["captureStatus"] = json!(observer); }
                     }
                 }
                 respond(request, 200, json!({"ok":true,"version":env!("CARGO_PKG_VERSION")}), true);
