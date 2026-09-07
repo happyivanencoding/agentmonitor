@@ -1,0 +1,30 @@
+{
+  "name": "agent-monitor",
+  "version": "0.5.2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "tauri": "tauri",
+    "test": "node --test tests/*.test.cjs",
+    "test:ui": "playwright test",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build --bundles nsis"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "react": "^19",
+    "react-dom": "^19",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5.9",
+    "vite": "^7",
+    "@vitejs/plugin-react": "^5",
+    "@playwright/test": "^1.55"
+  }
+}

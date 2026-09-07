@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Agent Monitor \u00b7 ChatGPT attribution",
+  "description": "Track ChatGPT requests, AgentDock tools, tasks and ACP execution locally for Agent Monitor.",
+  "version": "0.5.2",
+  "minimum_chrome_version": "111",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "http://127.0.0.1:43217/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Agent Monitor",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*"
+      ],
+      "js": [
+        "extractor.js",
+        "page-observer.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://chatgpt.com/*"
+      ],
+      "js": [
+        "relay.js"
+      ],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    }
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'"
+  }
+}

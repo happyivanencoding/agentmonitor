@@ -1,0 +1,33 @@
+[package]
+name = "agent-monitor"
+version = "0.5.2"
+description = "Local-first Agent workflow observability"
+authors = ["Agent Monitor contributors"]
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-single-instance = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+rusqlite = { version = "0.37", features = ["bundled"] }
+chrono = { version = "0.4", features = ["serde"] }
+sysinfo = "0.37"
+walkdir = "2"
+uuid = { version = "1", features = ["v4"] }
+tiny_http = "0.12"
+regex = "1"
+url = "2"
+flate2 = "1"
+jsonwebtoken = "9.3"
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+base64 = "0.22"
+windows-sys = { version = "0.59", features = ["Win32_Foundation", "Win32_Security_Cryptography"] }
+
+[profile.release]
+strip = true
+lto = "thin"
+codegen-units = 8
