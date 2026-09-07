@@ -11,6 +11,8 @@ After every future Agent Monitor code change, update relevant docs/handoff, comm
 
 ## Current release: 0.5.5 — independent low-latency progress
 
+**Remaining browser acceptance gap:** a later closeout sample had six Requests and sixteen tools, with `mapping-unavailable: authenticated missing-exact-mapping, f:404`. Do not declare every new conversation fully captured. Whether that sample was an in-flight mapping or an unsupported exact-ID variant was not established. The separate native progress path is verified (checkpoint 777 ms; final Task completion 1,823 ms); browser mapping remains a distinct, partially verified capability. See the later-closeout section of the 0.5.5 acceptance document.
+
 0.5.5 retains the 0.5.4 capture fixes below and fixes a separate live-progress bottleneck found during final acceptance: the real full process/token collection took about 42 seconds. Native Task files and observed Request/tool records now refresh on an independent 2-second path, rather than waiting for that collection. Slow publication preserves newer task/request state. Desktop events and web polling include `taskProgressAt` in their version checks; older deliveries cannot overwrite newer progress.
 
 Task freshness is separate from `generatedAt` (full metrics sample) and `collectionCompletedAt`. The UI explicitly warns when Agent/token metrics are older while steps continue updating. A cold start can expose real local plans before the first heavy scan finishes, with `metricsLoading` stated explicitly. Do not relabel this as instant process/token collection. The frontend's previously hard-coded 0.5.2 footer is corrected to the actual release version.
