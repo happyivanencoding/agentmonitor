@@ -13,7 +13,7 @@ function mapping(id){const suffix=id===cid?'one':'two';return {conversation_id:i
    if(url.pathname.startsWith('/backend-api/conversation/')){if(req.headers().authorization!=='Bearer fixture-secret-never-exported')return route.fulfill({status:401,json:{error:'auth required'}});return route.fulfill({json:mapping(url.pathname.split('/').pop())});}
    const suffix=url.pathname.endsWith(other)?'two':'one';return route.fulfill({contentType:'text/html',body:`<html><head><title>Fixture</title></head><body><main><div data-message-author-role="user" data-message-id="user-${suffix}">继续</div></main></body></html>`});});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('https://chatgpt.com/c/'+cid);
-  await page.waitForFunction(()=>window.__agentMonitorObserver?.version==='0.5.4');
+  await page.waitForFunction(()=>window.__agentMonitorObserver?.version==='0.5.5');
   async function until(predicate){for(let i=0;i<100;i++){const events=await worker.evaluate(()=>globalThis.__fixtureEvents);if(predicate(events))return events;await new Promise(r=>setTimeout(r,100));}throw new Error('Fixture event acceptance timeout');}
   let events=await until(rows=>rows.some(x=>x.url.endsWith('/v1/tool')&&x.payload.taskId==='tsk_fixtureone')&&rows.some(x=>x.url.endsWith('/v1/request')&&x.payload.phase==='completed'));
   assert(authReads>0,'Mapping 401 recovered through same-origin session');assert(!JSON.stringify(events).includes('fixture-secret-never-exported'));
@@ -25,7 +25,7 @@ function mapping(id){const suffix=id===cid?'one':'two';return {conversation_id:i
   const second=await context.newPage();second.on('pageerror',e=>errors.push(e.message));await second.goto('https://chatgpt.com/c/'+other);
   events=await until(rows=>rows.some(x=>x.url.endsWith('/v1/tool')&&x.payload.taskId==='tsk_fixturetwo'));
   for(const row of events.filter(x=>x.url.endsWith('/v1/tool')))assert.equal(row.payload.conversationUrl,'https://chatgpt.com/c/'+(row.payload.userMessageId==='user-one'?cid:other));
-  assert.deepEqual(errors,[]);const report={mode:'synthetic transport / real Chromium extension',extensionVersion:'0.5.4',authenticatedMappingRetry:true,taskCreateCaptured:true,recipientAllCompletion:true,repeatedTextNewId:true,existingTabReinjection:true,concurrentTabIsolation:true,credentialsNotExported:true,pageErrors:errors};
-  await fs.writeFile(path.resolve('.local/capture054.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+  assert.deepEqual(errors,[]);const report={mode:'synthetic transport / real Chromium extension',extensionVersion:'0.5.5',authenticatedMappingRetry:true,taskCreateCaptured:true,recipientAllCompletion:true,repeatedTextNewId:true,existingTabReinjection:true,concurrentTabIsolation:true,credentialsNotExported:true,pageErrors:errors};
+  await fs.writeFile(path.resolve('.local/capture055.json'),JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
  }finally{await context?.close();await fs.rm(profile,{recursive:true,force:true}).catch(()=>{});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

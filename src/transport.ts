@@ -2,7 +2,7 @@ import {invoke as nativeInvoke,isTauri} from '@tauri-apps/api/core';
 import {listen} from '@tauri-apps/api/event';
 import type {Snapshot} from './types';
 export const desktop=isTauri();
-export const APP_VERSION='0.5.2';
+export const APP_VERSION='0.5.5';
 
 async function request<T>(path:string,body?:unknown):Promise<T>{
  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);
@@ -36,17 +36,18 @@ export async function invoke<T=unknown>(command:string,args:Record<string,unknow
 }
 export function watchSnapshots(accept:(v:Snapshot)=>void,failed:(reason:string)=>void):()=>void{
  let version=0;
+ const deliver=(value:Snapshot)=>{const stamp=Math.max(value.generatedAt||0,value.lastAttemptAt||0,value.taskProgressAt||0,value.collectionCompletedAt||0);if(stamp>=version){version=stamp;accept(value);}};
  let stopped=false,busy=false,timer:ReturnType<typeof setTimeout>|undefined,unlisten:(()=>void)|undefined;
  const poll=async()=>{
   if(stopped||busy)return;
   if(!desktop&&document.visibilityState==='hidden'){timer=setTimeout(poll,3000);return;}
   busy=true;
-  try{const value=desktop?await invoke<Snapshot>('get_snapshot'):await request<Snapshot|null>(`/api/snapshot?since=${version}`);if(value&&!stopped){version=Math.max(value.generatedAt||0,value.lastAttemptAt||0);accept(value);}}catch(e){if(!stopped)failed(e instanceof Error?e.message:String(e));}
+  try{const value=desktop?await invoke<Snapshot>('get_snapshot'):await request<Snapshot|null>(`/api/snapshot?since=${version}`);if(value&&!stopped){deliver(value);}}catch(e){if(!stopped)failed(e instanceof Error?e.message:String(e));}
   finally{busy=false;if(!stopped){clearTimeout(timer);timer=setTimeout(poll,desktop?12000:3000);}}
  };
  const resume=()=>{clearTimeout(timer);void poll();};
  const offline=()=>failed('手机或浏览器当前离线。没有把旧数据当作实时结果。');
- if(desktop)listen<Snapshot>('monitor:snapshot',e=>{if(!stopped)accept(e.payload)}).then(u=>{if(stopped)u();else unlisten=u;}).catch(()=>{});
+ if(desktop)listen<Snapshot>('monitor:snapshot',e=>{if(!stopped)deliver(e.payload)}).then(u=>{if(stopped)u();else unlisten=u;}).catch(()=>{});
  document.addEventListener('visibilitychange',resume);window.addEventListener('online',resume);window.addEventListener('offline',offline);void poll();
  return()=>{stopped=true;clearTimeout(timer);unlisten?.();document.removeEventListener('visibilitychange',resume);window.removeEventListener('online',resume);window.removeEventListener('offline',offline);};
 }

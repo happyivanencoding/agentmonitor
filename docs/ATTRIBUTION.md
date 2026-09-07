@@ -55,6 +55,10 @@ Browser collection is not account-wide synchronization. It covers matching, inst
 
 The release has 44 Node tests and 36 Rust tests. `scripts/verify-capture.cjs` loads a real Chromium extension with explicitly synthetic transport; `scripts/verify-native-plans.cjs` checks the installed collector/UI against a real Task. The real signed-in acceptance also recovered seven tool records and an exact checkpoint association showing 3/3 steps. See [0.5.4 verification](VERIFICATION_0_5_4.md). Real prompts, IDs and private browser/account data are not committed as fixtures.
 
+## Independent progress freshness (0.5.5)
+
+The local Task projection and Monitor-owned Request/tool rows refresh on a lightweight 2-second path. This path does not scan Codex rollouts, process locks or token histories. Full collector results merge with newer progress before publication; HTTP and desktop consumers use the additional progress revision to avoid stale delivery. Only existing exact Task references are refreshed; no cross-conversation guesses are introduced. The original full-metrics sample time is retained and displayed separately. See [latency acceptance](VERIFICATION_0_5_5.md).
+
 ## Explicit local registration
 
 For workflows that already know the source conversation URL, the source repository includes `scripts/Register-AgentOrigin.ps1`:

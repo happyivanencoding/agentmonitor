@@ -6,6 +6,7 @@ mod bridge;
 mod collector;
 mod model;
 mod os;
+mod progress;
 mod remote;
 mod rollout;
 mod sources;
@@ -365,6 +366,7 @@ fn main() {
                     .join("dist")
             };
             remote::start(shared.clone(), web_root);
+            progress::start(shared.clone(), app.handle().clone());
             let handle = app.handle().clone();
             let state = shared.clone();
             std::thread::spawn(move || {
@@ -374,6 +376,7 @@ fn main() {
                     let mut snapshot = match result {
                         Ok(mut v) => {
                             v["loading"] = json!(false);
+                            v["collectionCompletedAt"] = json!(model::now_ms());
                             v
                         }
                         Err(e) => {
@@ -400,6 +403,7 @@ fn main() {
                         .map(|s| s.clone())
                         .unwrap_or(Value::Null);
                     if let Ok(mut s) = state.snapshot.lock() {
+                        progress::preserve_latest(&mut snapshot, &s);
                         *s = snapshot.clone();
                     }
                     let _ = handle.emit("monitor:snapshot", &snapshot);

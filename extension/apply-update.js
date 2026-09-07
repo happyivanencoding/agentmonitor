@@ -5,7 +5,7 @@
   url.searchParams.set('applied','1');history.replaceState(null,'',url.href);
   if(chrome.scripting)for(const tab of await chrome.tabs.query({url:'https://chatgpt.com/*'})){
     try{await chrome.scripting.executeScript({target:{tabId:tab.id},world:'MAIN',func:()=>{window.__agentMonitorObserver?.dispose?.();delete window.__agentMonitorObserver;}});}catch{}
-    try{await chrome.scripting.executeScript({target:{tabId:tab.id},world:'ISOLATED',func:()=>{delete globalThis.__agentMonitorRelay054;}});}catch{}
+    try{await chrome.scripting.executeScript({target:{tabId:tab.id},world:'ISOLATED',func:()=>{delete globalThis.__agentMonitorRelay055;}});}catch{}
   }
   chrome.runtime.reload();
 })().catch(()=>{document.getElementById('status').textContent='请在浏览器扩展管理页重新加载 Agent Monitor。';});

@@ -164,7 +164,9 @@ fn handle(mut r: Request, state: &Shared, root: &Path, access: Option<&Access>) 
                 let version = snapshot["generatedAt"]
                     .as_i64()
                     .unwrap_or(0)
-                    .max(snapshot["lastAttemptAt"].as_i64().unwrap_or(0));
+                    .max(snapshot["lastAttemptAt"].as_i64().unwrap_or(0))
+                    .max(snapshot["taskProgressAt"].as_i64().unwrap_or(0))
+                    .max(snapshot["collectionCompletedAt"].as_i64().unwrap_or(0));
                 let since = url
                     .query_pairs()
                     .find(|(k, _)| k == "since")

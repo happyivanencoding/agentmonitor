@@ -175,5 +175,5 @@
   }
   const api={retryDelay,userRecord,canonicalToolName,isFinal,normalizeConversation,conversationId,extractTool,inspectConversation,inspectRequestActivities,latestUser,requestUser,messageText,invocationIdentity,invocationActivity,resultActivity,UUID,ACP};
   if(typeof module==='object'&&module.exports)module.exports=api;
-  else {root.AgentMonitorParserV054=api;if(!Object.getOwnPropertyDescriptor(root,'AgentMonitorParser')||Object.getOwnPropertyDescriptor(root,'AgentMonitorParser').configurable)Object.defineProperty(root,'AgentMonitorParser',{value:api,writable:false,configurable:true});}
+  else {root.AgentMonitorParserV055=api;if(!Object.getOwnPropertyDescriptor(root,'AgentMonitorParser')||Object.getOwnPropertyDescriptor(root,'AgentMonitorParser').configurable)Object.defineProperty(root,'AgentMonitorParser',{value:api,writable:false,configurable:true});}
 })(typeof globalThis==='object'?globalThis:this);

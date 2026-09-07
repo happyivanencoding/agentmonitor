@@ -1,12 +1,14 @@
 # Agent Monitor
 
-## 0.5.4 — reliable capture and native task progress
+## 0.5.5 — independent low-latency task progress
 
 Remote entry example: **https://monitor.example.com**. Same-machine browser: `http://127.0.0.1:43218`. The real public hostname is deployment-specific and stays in local configuration. Open the configured remote URL, sign in through the owner-only Cloudflare Access application, then use **连接与设置 → 安装 / 添加到主屏幕**. The phone version is an installable PWA, not an APK.
 
 Canonical source repository: `https://github.com/happyivanencoding/agentmonitor`. See [repository and privacy policy](docs/REPOSITORY.md). Agent Monitor code changes are expected to be committed and pushed to `origin/main` as part of the same development task.
 
-0.5.4 fixes the observed browser capture failure and makes native plans usable without ACP. **工作总览** and **任务看板** now expose expandable local Task steps independently of browser attribution. Paired ChatGPT tabs use exact message IDs, long causal ancestry, authenticated mapping recovery, canonical connector tool paths and durable event delivery. An exact checkpoint can associate a Task with a Request, explicitly labeled as participation rather than creation; reading another Task cannot claim it. Settings show actual Request/tool ingress and capture errors instead of equating page heartbeat with successful capture. See [0.5.4 acceptance](docs/VERIFICATION_0_5_4.md).
+0.5.5 separates Task steps and captured Request/tool records from the heavy Agent/process/token scan. Native progress refreshes independently every two seconds; web polling receives those updates instead of waiting for a full collection (about 42 seconds in the real acceptance environment). A later slow snapshot cannot restore old steps. Full metrics retain their actual sampling time, and the UI distinguishes older metrics from current steps. See [0.5.5 latency acceptance](docs/VERIFICATION_0_5_5.md).
+
+0.5.4 fixed the observed browser capture failure and makes native plans usable without ACP. **工作总览** and **任务看板** now expose expandable local Task steps independently of browser attribution. Paired ChatGPT tabs use exact message IDs, long causal ancestry, authenticated mapping recovery, canonical connector tool paths and durable event delivery. An exact checkpoint can associate a Task with a Request, explicitly labeled as participation rather than creation; reading another Task cannot claim it. Settings show actual Request/tool ingress and capture errors instead of equating page heartbeat with successful capture. See [0.5.4 acceptance](docs/VERIFICATION_0_5_4.md).
 
 The older 0.5.2 policy remains: every user message that actually triggers execution must create its **own** AgentDock Task/Steps, even when it is a short continuation such as “测试一下” or “再看看”. The browser observer can also re-read the exact current ChatGPT conversation mapping to backfill `task_manage` and ordinary AgentDock tool events for the current user-message ID, covering interruption/alternate transport paths where the live stream itself does not expose those frames. While a Request is still responding and no plan has arrived yet, the UI says **等待执行计划**; observed execution without a plan says **未认领计划**; **无执行计划** is reserved for completed requests that truly did not execute anything.
 
@@ -46,12 +48,12 @@ Six pages provide work overview, timelines, process inventory, observed token us
 Build output:
 
 ```text
-src-tauri\target\release\bundle\nsis\Agent Monitor_0.5.4_x64-setup.exe
+src-tauri\target\release\bundle\nsis\Agent Monitor_0.5.5_x64-setup.exe
 ```
 
 Run the per-user installer, then open **Agent Monitor** from the Windows Start menu. No business-project changes are needed. WebView2 is the desktop rendering runtime. This local installer is unsigned; it is not a claim of code-signed public distribution.
 
-The installed app also serves the packaged web/PWA assets on loopback port 43218. The first snapshot may take several seconds. Subsequent collections run after a 2.5-second interval; the actual cadence includes collection time. The overview initially shows current work and the last 24 hours; **全部记录** exposes older work in the monitored collection. Click an Agent to inspect its IDs, status evidence, tool timeline, host and task association.
+The installed app also serves the packaged web/PWA assets on loopback port 43218. The first snapshot may take several seconds. Heavy collections run after a 2.5-second interval; their actual cadence includes collection time. Task steps and captured Requests/tools use a separate 2-second refresh path. The overview initially shows current work and the last 24 hours; **全部记录** exposes older work in the monitored collection. Click an Agent to inspect its IDs, status evidence, tool timeline, host and task association.
 
 Closing the window leaves Monitor in the system tray. Use **Quit Agent Monitor** in its tray menu to stop it. Automatic Windows login startup is controlled in **连接与设置**. It is enabled on this remote-monitoring deployment; other installations remain opt-in. The installed collector is currently left running in the tray. See [0.5.4 capture/native-plan verification](docs/VERIFICATION_0_5_4.md), [0.5 Request/dynamic-plan verification](docs/VERIFICATION_0_5.md), [0.4 task/stale-cleanup verification](docs/VERIFICATION_0_4.md), [0.3 attribution verification](docs/VERIFICATION_0_3.md), and the earlier [0.2 release acceptance](docs/VERIFICATION_0_2.md).
 

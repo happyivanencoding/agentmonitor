@@ -1,8 +1,8 @@
 /* Exact page observations only. Credentials stay in this page closure; never sent to the extension. */
 (() => {
   'use strict';
-  const parser=globalThis.AgentMonitorParserV054;if(!parser)return;
-  const VERSION='0.5.4', CHANNEL='agent-monitor:attribution:v1';
+  const parser=globalThis.AgentMonitorParserV055;if(!parser)return;
+  const VERSION='0.5.5', CHANNEL='agent-monitor:attribution:v1';
   if(window.__agentMonitorObserver?.version===VERSION)return;
   window.__agentMonitorObserver?.dispose?.();
   const nativeFetch=window.fetch;
