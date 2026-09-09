@@ -2,7 +2,7 @@ import {invoke as nativeInvoke,isTauri} from '@tauri-apps/api/core';
 import {listen} from '@tauri-apps/api/event';
 import type {Snapshot} from './types';
 export const desktop=isTauri();
-export const APP_VERSION='0.5.5';
+export const APP_VERSION='0.5.6';
 
 async function request<T>(path:string,body?:unknown):Promise<T>{
  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);

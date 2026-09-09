@@ -1,10 +1,12 @@
 # Agent Monitor
 
-## 0.5.5 — independent low-latency task progress
+## 0.5.6 — canonical project grouping
 
 Remote entry example: **https://monitor.example.com**. Same-machine browser: `http://127.0.0.1:43218`. The real public hostname is deployment-specific and stays in local configuration. Open the configured remote URL, sign in through the owner-only Cloudflare Access application, then use **连接与设置 → 安装 / 添加到主屏幕**. The phone version is an installable PWA, not an APK.
 
 Canonical source repository: `https://github.com/happyivanencoding/agentmonitor`. See [repository and privacy policy](docs/REPOSITORY.md). Agent Monitor code changes are expected to be committed and pushed to `origin/main` as part of the same development task.
+
+0.5.6 treats AgentDock transport workspaces such as `*-isolated-model-<pid>-<suffix>` as temporary execution directories rather than top-level projects. When a matching real project exists under the local `dev` root, the collector resolves the temporary workspace back to that canonical project folder; otherwise all temporary workspaces with the same transport slug still collapse to one project slug. This prevents one application from exploding into dozens of pseudo-project folders while preserving the exact temporary `cwd` in Agent evidence. Usage analytics also coalesces previously recorded isolated-workspace aliases at read time, so historical token rows do not recreate the split project list. See [0.5.6 project-grouping acceptance](docs/VERIFICATION_0_5_6.md).
 
 0.5.5 separates Task steps and captured Request/tool records from the heavy Agent/process/token scan. Native progress refreshes independently every two seconds; web polling receives those updates instead of waiting for a full collection (about 42 seconds in the real acceptance environment). A later slow snapshot cannot restore old steps. Full metrics retain their actual sampling time, and the UI distinguishes older metrics from current steps. See [0.5.5 latency acceptance](docs/VERIFICATION_0_5_5.md).
 
@@ -48,7 +50,7 @@ Six pages provide work overview, timelines, process inventory, observed token us
 Build output:
 
 ```text
-src-tauri\target\release\bundle\nsis\Agent Monitor_0.5.5_x64-setup.exe
+src-tauri\target\release\bundle\nsis\Agent Monitor_0.5.6_x64-setup.exe
 ```
 
 Run the per-user installer, then open **Agent Monitor** from the Windows Start menu. No business-project changes are needed. WebView2 is the desktop rendering runtime. This local installer is unsigned; it is not a claim of code-signed public distribution.

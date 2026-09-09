@@ -2,7 +2,7 @@
 (() => {
   'use strict';
   const parser=globalThis.AgentMonitorParserV055;if(!parser)return;
-  const VERSION='0.5.5', CHANNEL='agent-monitor:attribution:v1';
+  const VERSION='0.5.6', CHANNEL='agent-monitor:attribution:v1';
   if(window.__agentMonitorObserver?.version===VERSION)return;
   window.__agentMonitorObserver?.dispose?.();
   const nativeFetch=window.fetch;

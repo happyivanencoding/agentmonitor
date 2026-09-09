@@ -7,6 +7,7 @@ mod collector;
 mod model;
 mod os;
 mod progress;
+mod project;
 mod remote;
 mod rollout;
 mod sources;

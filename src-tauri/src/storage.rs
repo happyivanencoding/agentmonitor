@@ -3,6 +3,7 @@ use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{
+    collections::HashMap,
     path::{Path, PathBuf},
     time::Duration,
 };
@@ -470,8 +471,20 @@ pub fn analytics(c: &Connection, days: i64) -> Value {
         )
         .unwrap_or(0);
     fn group(c: &Connection, field: &str, start: i64) -> Vec<Value> {
-        let sql=format!("SELECT {field},SUM(delta) FROM usage_samples WHERE at_ms>=? GROUP BY {field} ORDER BY SUM(delta) DESC LIMIT 20");
-        c.prepare(&sql).and_then(|mut s|s.query_map([start],|r|Ok(json!({"name":r.get::<_,Option<String>>(0)?.unwrap_or_else(||"unknown".into()),"tokens":r.get::<_,i64>(1)?})))?.collect()).unwrap_or_default()
+        let limit = if field == "project" { "" } else { " LIMIT 20" };
+        let sql=format!("SELECT {field},SUM(delta) FROM usage_samples WHERE at_ms>=? GROUP BY {field} ORDER BY SUM(delta) DESC{limit}");
+        let rows:Vec<(String,i64)>=c.prepare(&sql).and_then(|mut s|s.query_map([start],|r|Ok((r.get::<_,Option<String>>(0)?.unwrap_or_else(||"unknown".into()),r.get::<_,i64>(1)?)))?.collect()).unwrap_or_default();
+        if field != "project" {
+            return rows.into_iter().map(|(name,tokens)|json!({"name":name,"tokens":tokens})).collect();
+        }
+        let mut totals=HashMap::<String,i64>::new();
+        for (name,tokens) in rows {
+            *totals.entry(crate::project::from_label(&name)).or_default() += tokens;
+        }
+        let mut rows=totals.into_iter().collect::<Vec<_>>();
+        rows.sort_by(|a,b|b.1.cmp(&a.1));
+        rows.truncate(20);
+        rows.into_iter().map(|(name,tokens)|json!({"name":name,"tokens":tokens})).collect()
     }
     let first = c
         .query_row(
@@ -497,6 +510,19 @@ mod tests {
             sample_delta(Some((72810, 1788692259000)), 72910, 1788692262000),
             Some(100)
         );
+    }
+    #[test]
+    fn analytics_merges_isolated_project_history() {
+        let c = Connection::open_in_memory().unwrap();
+        c.execute_batch("CREATE TABLE usage_samples(thread_id TEXT,at_ms INTEGER,delta INTEGER,model TEXT,project TEXT);").unwrap();
+        let at = now_ms();
+        c.execute("INSERT INTO usage_samples VALUES(?,?,?,?,?)", params!["t1",at,10,"m","zzfixture-app-isolated-model-100-aA"]).unwrap();
+        c.execute("INSERT INTO usage_samples VALUES(?,?,?,?,?)", params!["t2",at,20,"m","zzfixture-app-isolated-model-200-bB"]).unwrap();
+        let value = analytics(&c, 1);
+        let rows = value["byProject"].as_array().unwrap();
+        assert_eq!(rows.len(), 1);
+        assert_eq!(rows[0]["name"], "zzfixture-app");
+        assert_eq!(rows[0]["tokens"], 30);
     }
     #[test]
     fn reset_and_gap_rebaseline() {

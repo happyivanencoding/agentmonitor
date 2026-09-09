@@ -1,6 +1,6 @@
 # Agent Monitor — maintenance handoff
 
-Updated: 2026-09-07. Project root: `C:\dev\agent-monitor`. This is an independent project. No unrelated application project code was changed. AgentDock binaries/source were not modified; one user-level AgentDock Skill was installed under `~/.agentdock`.
+Updated: 2026-09-09. Project root: `C:\dev\agent-monitor`. This is an independent project. No unrelated application project code was changed. AgentDock binaries/source were not modified; one user-level AgentDock Skill was installed under `~/.agentdock`.
 
 
 ## Repository workflow
@@ -9,7 +9,9 @@ Canonical remote: `https://github.com/happyivanencoding/agentmonitor`.
 
 After every future Agent Monitor code change, update relevant docs/handoff, commit the completed change to local `main`, and push it to `origin/main` in the same task. Do not leave completed code changes only on the workstation. Before every push, keep the public tree free of personal names/emails, user-specific profile paths, credentials, pairing keys, runtime databases, deployment IDs, screenshots, real prompts/transcripts and unrelated project data. Deployment-specific values belong in ignored runtime files/environment variables. See `docs/REPOSITORY.md`.
 
-## Current release: 0.5.5 — independent low-latency progress
+## Current release: 0.5.6 — canonical project grouping
+
+0.5.6 fixes project identity for AgentDock model-transport workspaces. Paths under `.agentdock/tmp` matching `*-isolated-model-<pid>-<suffix>` are temporary execution workspaces, not projects. The collector collapses them to one transport slug and, when a matching real folder exists under the same drive's `dev` root, resolves that slug to the real project folder name. Exact temporary `cwd` remains available in Agent evidence; only the project grouping key changes. Overview, timeline and Request inheritance therefore share the canonical project instead of creating one top-level folder per model call. Usage analytics also canonicalizes previously stored isolated-workspace project labels while grouping, so historical token rows no longer reintroduce the split in the usage view.
 
 **Remaining browser acceptance gap:** a later closeout sample had six Requests and sixteen tools, with `mapping-unavailable: authenticated missing-exact-mapping, f:404`. Do not declare every new conversation fully captured. Whether that sample was an in-flight mapping or an unsupported exact-ID variant was not established. The separate native progress path is verified (checkpoint 777 ms; final Task completion 1,823 ms); browser mapping remains a distinct, partially verified capability. See the later-closeout section of the 0.5.5 acceptance document.
 
@@ -17,7 +19,7 @@ After every future Agent Monitor code change, update relevant docs/handoff, comm
 
 Task freshness is separate from `generatedAt` (full metrics sample) and `collectionCompletedAt`. The UI explicitly warns when Agent/token metrics are older while steps continue updating. A cold start can expose real local plans before the first heavy scan finishes, with `metricsLoading` stated explicitly. Do not relabel this as instant process/token collection. The frontend's previously hard-coded 0.5.2 footer is corrected to the actual release version.
 
-Current tests: 44 Node and 41 Rust tests, including exact fast Request association, slow-snapshot non-regression, completion and partial startup. `scripts/verify-progress-latency.cjs <actual-task-id> <step-id>` observes a genuine normal Task checkpoint without writing any fixture data; private timing results remain in `.local`. See [0.5.5 latency acceptance](docs/VERIFICATION_0_5_5.md) and the earlier [0.5.4 capture acceptance](docs/VERIFICATION_0_5_4.md). Existing phone/native-client attribution and mapping-rate-limit boundaries still apply.
+0.5.6 adds five focused Rust checks for canonical workspace parsing and historical usage merging; all five passed, and the optimized 0.5.6 desktop/Web bundle passed. The last full unrelated-suite baseline remains 44 Node and 41 Rust tests from 0.5.5; those unrelated suites were not rerun for this grouping-only change. See [0.5.6 project-grouping acceptance](docs/VERIFICATION_0_5_6.md), [0.5.5 latency acceptance](docs/VERIFICATION_0_5_5.md) and the earlier [0.5.4 capture acceptance](docs/VERIFICATION_0_5_4.md). Existing phone/native-client attribution and mapping-rate-limit boundaries still apply.
 
 ## Historical release: 0.5.4 — verified capture and independent native progress
 

@@ -42,20 +42,7 @@ fn created(v: &Value) -> i64 {
         .unwrap_or(0)
 }
 fn project(cwd: &str) -> String {
-    let normalized = cwd.replace('\\', "/");
-    let parts = normalized
-        .split('/')
-        .filter(|p| !p.is_empty())
-        .collect::<Vec<_>>();
-    if let Some(i) = parts.iter().position(|p| p.eq_ignore_ascii_case("dev")) {
-        if let Some(name) = parts.get(i + 1) {
-            return (*name).into();
-        }
-    }
-    parts
-        .last()
-        .map(|s| (*s).to_owned())
-        .unwrap_or_else(|| "unknown workspace".into())
+    crate::project::from_cwd(cwd)
 }
 fn title(v: &Value) -> String {
     for k in ["name", "agent_nickname"] {
