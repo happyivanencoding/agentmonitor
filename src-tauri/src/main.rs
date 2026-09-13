@@ -5,6 +5,7 @@ mod api;
 mod bridge;
 mod collector;
 mod model;
+mod onward_jobs;
 mod os;
 mod progress;
 mod project;
@@ -47,6 +48,12 @@ async fn get_detail(id: String, state: tauri::State<'_, Shared>) -> Result<Value
 #[tauri::command]
 fn get_analytics(days: i64, state: tauri::State<'_, Shared>) -> Result<Value, String> {
     api::analytics(&state, days)
+}
+#[tauri::command]
+async fn get_onward_jobs() -> Result<Value, String> {
+    tauri::async_runtime::spawn_blocking(onward_jobs::snapshot)
+        .await
+        .map_err(|e| e.to_string())?
 }
 #[tauri::command]
 fn bind_agent(
@@ -321,6 +328,7 @@ fn main() {
             get_snapshot,
             get_detail,
             get_analytics,
+            get_onward_jobs,
             bind_agent,
             unbind_agent,
             set_agent_archived,

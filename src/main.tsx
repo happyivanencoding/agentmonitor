@@ -2,14 +2,25 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {invoke,watchSnapshots,desktop,APP_VERSION} from './transport';
 import {RemoteSettings} from './RemoteSettings';
-import {Activity,LayoutDashboard,GanttChartSquare,Cpu,BarChart3,Settings2,ListChecks,Monitor,ArrowUpRight,Check,Clock,AlertTriangle,Search,Sun,Moon,ChevronDown,ChevronRight,X,Link2,ExternalLink,Copy,FolderOpen,ShieldCheck,GitBranch,Command,Wifi,RefreshCw,CheckCircle2,Circle,Terminal,FileCode2,Zap,Download,Archive,ArchiveRestore} from 'lucide-react';
+import {OnwardJobsPage} from './OnwardJobsPage';
+import {Activity,LayoutDashboard,GanttChartSquare,Cpu,BarChart3,Settings2,ListChecks,BriefcaseBusiness,Monitor,ArrowUpRight,Check,Clock,AlertTriangle,Search,Sun,Moon,ChevronDown,ChevronRight,X,Link2,ExternalLink,Copy,FolderOpen,ShieldCheck,GitBranch,Command,Wifi,RefreshCw,CheckCircle2,Circle,Terminal,FileCode2,Zap,Download,Archive,ArchiveRestore} from 'lucide-react';
 import type {Agent,Snapshot,Event,Detail,Task,MonitorTask,Analytics,Process,SourceHealth,ChatRequest} from './types';
 import './styles.css';
 import './mobile.css';
 
-type Page='overview'|'timeline'|'processes'|'usage'|'tasks'|'settings';
+type Page='overview'|'timeline'|'processes'|'usage'|'tasks'|'onward'|'settings';
 type Notify=(message:string)=>void;
-const nav=[['overview','工作总览',LayoutDashboard],['timeline','时间线',GanttChartSquare],['processes','系统进程',Cpu],['usage','用量与历史',BarChart3],['tasks','任务看板',ListChecks],['settings','连接与设置',Settings2]] as const;
+const nav=[['overview','工作总览',LayoutDashboard],['timeline','时间线',GanttChartSquare],['processes','系统进程',Cpu],['usage','用量与历史',BarChart3],['tasks','任务看板',ListChecks],['onward','Onward 招聘',BriefcaseBusiness],['settings','连接与设置',Settings2]] as const;
+const pageMeta:Record<Page,{eyebrow:string;description:string}>={
+ overview:{eyebrow:'ALL YOUR AGENTS. ONE CLEAR PICTURE.',description:'谁发起了工作，正在做什么，哪里需要你留意。'},
+ timeline:{eyebrow:'FOLLOW THE WORK, NOT THE SPINNER.',description:'把 conversation、ACP、turn 与工具活动放回同一条时间轴。'},
+ processes:{eyebrow:'LOCAL OBSERVABILITY',description:'系统进程是运行载体，不是逻辑 Agent。'},
+ usage:{eyebrow:'LOCAL OBSERVABILITY',description:'真实累计值与连续观测增量分开记账。'},
+ tasks:{eyebrow:'GOALS OVER PROCESSES.',description:'按项目 → 对话 → 每条用户 Request 查看步骤、动态计划与真实执行。'},
+ onward:{eyebrow:'JOB MARKET PIPELINE · LIVE',description:'监视 Onward 的法国岗位采集、去重、金融官方源与 VPS 搜索索引同步。'},
+ settings:{eyebrow:'CONNECTED, NOT ASSUMED.',description:'只读采集、精确归属，以及清楚可见的能力边界。'},
+};
+const mobileNavLabel:Record<Page,string>={overview:'总览',timeline:'时间线',processes:'进程',usage:'用量',tasks:'任务',onward:'招聘',settings:'连接'};
 const labels:Record<string,string>={RUNNING:'执行中',WAITING_MODEL:'等待模型',WAITING_TOOL:'工具运行中',WAITING_USER:'等待确认',IDLE:'空闲',COMPLETED:'已完成',FAILED:'失败',CRASHED:'进程已退出',SUSPECTED_STALLED:'疑似停滞',UNKNOWN:'未知'};
 const live=new Set(['RUNNING','WAITING_MODEL','WAITING_TOOL','WAITING_USER']);
 const activeTurn=(s?:string)=>['inProgress','in_progress','running','started'].includes(s||'');
@@ -53,7 +64,7 @@ function App(){
  return <div className={`shell ${selectedAgent?'has-detail':''}`}>
   <aside className="sidebar"><div className="brand"><div className="brand-icon"><Activity size={23}/></div><div><strong>Agent Monitor</strong><span>YOUR LOCAL CONTROL ROOM</span></div></div><div className="workspace"><span className="workspace-dot"/><div>{desktop?'这台电脑':'家里的电脑'}<small>{desktop?'Windows · Local first':'Web · Remote monitor'}</small></div><Monitor size={16}/></div><div className="nav-label">WORKSPACE</div><nav>{nav.map(([id,label,Icon])=>{const activeRequests=(data.requests||[]).filter(r=>['active','responding'].includes(r.status)).length;const activeTasks=activeRequests||((data.monitorTasks||[]).filter(t=>t.status==='active').length+data.tasks.filter(t=>t.status==='active').length);return <button key={id} aria-label={label} className={page===id?'nav-item selected':'nav-item'} onClick={()=>{setPage(id);setSelected(null)}}><Icon size={18}/><span>{label}</span>{id==='tasks'&&activeTasks>0&&<b>{activeTasks}</b>}</button>})}</nav><div className="sidebar-note"><ShieldCheck size={18}/><span>{desktop?'源数据保留在本机':'源文件留在家里'}<small>本机采集 · 受保护的远程查看</small></span></div><footer><div className="collector-state"><i className={stale?'error':data.loading?'starting':'online'}/><span>{stale?'采集暂不可用':data.loading?'正在连接真实数据':'实时采集已连接'}</span></div><small>{data.collectionMs!=null?`${data.collectionMs} ms / cycle`:'initializing'}<span>v{APP_VERSION}</span></small></footer></aside>
   <div className="workspace-main"><header className="topbar"><div className="breadcrumb">Workspace <ChevronRight size={13}/> <strong>{nav.find(n=>n[0]===page)?.[1]}</strong></div><div className="top-actions"><span className={`connection-pill ${dockHealthy?'good':''}`}><i/>AgentDock {dockHealthy?'Healthy':dockHealthy===false?'Unavailable':'…'}</span><IconButton label={theme==='dark'?'切换亮色':'切换暗色'} onClick={()=>setTheme(theme==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={18}/>:<Moon size={18}/>}</IconButton></div></header>
-   <main className="page"><div className="page-heading"><div><div className="eyebrow">{page==='overview'?'ALL YOUR AGENTS. ONE CLEAR PICTURE.':page==='timeline'?'FOLLOW THE WORK, NOT THE SPINNER.':page==='tasks'?'GOALS OVER PROCESSES.':page==='settings'?'CONNECTED, NOT ASSUMED.':'LOCAL OBSERVABILITY'}</div><h1>{nav.find(n=>n[0]===page)?.[1]}{page==='overview'&&<span className={`live-label ${stale?'offline':''}`}><i/>{stale?'OFFLINE':'LIVE'}</span>}</h1><p>{page==='overview'?'谁发起了工作，正在做什么，哪里需要你留意。':page==='timeline'?'把 conversation、ACP、turn 与工具活动放回同一条时间轴。':page==='processes'?'系统进程是运行载体，不是逻辑 Agent。':page==='usage'?'真实累计值与连续观测增量分开记账。':page==='tasks'?'按项目 → 对话 → 每条用户 Request 查看步骤、动态计划与真实执行。':'只读采集、精确归属，以及清楚可见的能力边界。'}</p></div><span className="today">{new Date(now).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}<small>{clock(now)}</small></span></div>
+   <main className="page"><div className="page-heading"><div><div className="eyebrow">{pageMeta[page].eyebrow}</div><h1>{nav.find(n=>n[0]===page)?.[1]}{page==='overview'&&<span className={`live-label ${stale?'offline':''}`}><i/>{stale?'OFFLINE':'LIVE'}</span>}</h1><p>{pageMeta[page].description}</p></div><span className="today">{new Date(now).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}<small>{clock(now)}</small></span></div>
     {metricsBehind&&<div className="notice"><Activity size={18}/><p>任务步骤独立刷新，不等待进程和 Token 扫描。{data.metricsLoading?'首轮 Agent / 用量数据仍在采集中。':`全量数据最近采样于 ${stamp(data.generatedAt)}，上一轮耗时 ${Math.round((data.collectionMs||0)/1000)} 秒。`}</p></div>}
     {stale&&<div className="notice danger" role="alert"><AlertTriangle size={19}/><div><strong>当前数据可能已过期</strong><p>{data.collectorError||'未收到新的采集快照。界面不会把旧状态当作实时结果。'} 最近成功采集：{stamp(data.generatedAt)}</p>{!desktop&&<button className="secondary" onClick={()=>location.reload()}>重新连接 / 登录</button>}</div></div>}
     {!data.loading&&data.sources?.progressPolicy?.healthy===false&&<div className="notice danger" role="alert"><AlertTriangle size={19}/><div><strong>执行进度规则未激活</strong><p>Agent Monitor 仍会记录 Request 与真实工具活动，但 LLM 可能不会主动创建/更新 task_manage 步骤。请在“连接与设置”检查 execution-progress Skill。</p></div></div>}
@@ -66,11 +77,12 @@ function App(){
     {page==='processes'&&<ProcessPage processes={data.processes} agents={data.agents}/>}
     {page==='usage'&&<UsagePage snapshot={data} notify={setToast}/>}
     {page==='tasks'&&<><NativePlanWorklist tasks={nativePlans} now={now} all/><RequestWorklist requests={requests} agents={data.agents} now={now} onSelect={setSelected} taskPage/><TaskBoard monitorTasks={data.monitorTasks||[]} nativeTasks={data.tasks} agents={data.agents} now={now} onSelect={setSelected} reaper={data.sources?.autoStop}/></>}
+    {page==='onward'&&<OnwardJobsPage notify={setToast}/>}
     {page==='settings'&&(desktop?<SettingsPage snapshot={data} notify={setToast}/>:<RemoteSettings snapshot={data} notify={setToast}/>)}
     </>}
    </main>
   </div>
-  <nav className="mobile-nav" aria-label="手机导航">{nav.map(([id,label,Icon],i)=><button key={id} className={page===id?'selected':''} aria-label={label} onClick={()=>{setPage(id);setSelected(null)}}><Icon size={21}/><span>{['总览','时间线','进程','用量','任务','连接'][i]}</span></button>)}</nav>
+  <nav className="mobile-nav" aria-label="手机导航">{nav.map(([id,label,Icon])=><button key={id} className={page===id?'selected':''} aria-label={label} onClick={()=>{setPage(id);setSelected(null)}}><Icon size={21}/><span>{mobileNavLabel[id]}</span></button>)}</nav>
   {selectedAgent&&<AgentDetail agent={selectedAgent} tasks={data.tasks} now={now} onClose={()=>setSelected(null)} onBind={()=>setBinding(selectedAgent)} onSelect={setSelected} onArchive={setArchived} notify={setToast}/>}
   {binding&&<BindModal agent={binding} onClose={()=>setBinding(null)} notify={setToast}/>}
   {toast&&<div className="toast" role="status"><CheckCircle2 size={17}/><span>{toast}</span><button onClick={()=>setToast('')} aria-label="关闭提示"><X size={15}/></button></div>}

@@ -20,6 +20,14 @@ The key is not printed by the registration helper or tests. Never paste it into 
 
 Browser tool-result attribution is evidence from the paired browser, not cryptographic attestation by ChatGPT. Compromised page code could falsify metadata, but the bridge cannot execute programs, read arbitrary local files, stop agents, or modify source projects. Existing bindings to a different conversation are rejected until explicitly removed through the desktop UI.
 
+## Onward recruitment observability
+
+Agent Monitor 0.5.7 adds a fixed, read-only Onward recruitment dashboard. The collector reads only the known local directory `C:\dev\onward-job-data` (or the operator-supplied `AGENT_MONITOR_ONWARD_JOB_DATA` override), and only these derived/control surfaces: collector state JSON, finance-source state JSON, the derived 14-day summary/build state, bounded tails of collector/build/sync logs, and four fixed Windows Task Scheduler records. It does **not** enumerate or read the Raw Layer job snapshots, Candidate/CV data, provider credentials, SSH private keys, or the multi-gigabyte search SQLite database.
+
+Task Scheduler status is queried with a fixed list of task names through the Windows Schedule.Service COM API. The helper PowerShell process is started with `CREATE_NO_WINDOW`; no user-supplied command, path or task name is interpolated into this surface. The dashboard cannot start, stop, edit, retry or reschedule a task.
+
+The optional remote/PWA route `/api/onward-jobs` exposes the same bounded operational summary to the already authenticated Agent Monitor owner. It contains aggregate counts, provider/task health, recent per-run counts and VPS-sync evidence; it contains no raw vacancy description, secret, CV or application data. The route is read-only and inherits the existing owner-authenticated/no-store web boundary.
+
 ## Desktop preferences and links
 
 The frontend's native command surface allows only known Monitor operations. Chat links must be HTTPS on `chatgpt.com` and identify a valid conversation UUID. Folder-opening commands open fixed application folders. Autostart writes only the current user's Windows Run entry and is off by default. Closing the window leaves the collector in the tray; Quit ends it.
