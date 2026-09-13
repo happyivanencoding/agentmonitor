@@ -22,7 +22,7 @@ Browser tool-result attribution is evidence from the paired browser, not cryptog
 
 ## Onward recruitment observability
 
-Agent Monitor 0.5.7 adds a fixed, read-only Onward recruitment dashboard. The collector reads only the known local directory `C:\dev\onward-job-data` (or the operator-supplied `AGENT_MONITOR_ONWARD_JOB_DATA` override), and only these derived/control surfaces: collector state JSON, finance-source state JSON, the derived 14-day summary/build state, bounded tails of collector/build/sync logs, and four fixed Windows Task Scheduler records. It does **not** enumerate or read the Raw Layer job snapshots, Candidate/CV data, provider credentials, SSH private keys, or the multi-gigabyte search SQLite database.
+Agent Monitor 0.5.7 adds a fixed, read-only Onward recruitment dashboard. The collector reads only the known local directory `C:\dev\onward-job-data` (or the operator-supplied `AGENT_MONITOR_ONWARD_JOB_DATA` override), and only these derived/control surfaces: collector state JSON, finance-source state JSON, the derived 21-day summary/build state, bounded tails of collector/build/sync logs, and four fixed Windows Task Scheduler records. It does **not** enumerate or read the Raw Layer job snapshots, Candidate/CV data, provider credentials, SSH private keys, or the multi-gigabyte search SQLite database.
 
 Task Scheduler status is queried with a fixed list of task names through the Windows Schedule.Service COM API. The helper PowerShell process is started with `CREATE_NO_WINDOW`; no user-supplied command, path or task name is interpolated into this surface. The dashboard cannot start, stop, edit, retry or reschedule a task.
 

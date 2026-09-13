@@ -457,7 +457,7 @@ pub fn snapshot() -> Result<Value, String> {
     }
     let state = read_json(&root.join("state.json"));
     let finance = read_json(&root.join("finance-official-state.json"));
-    let summary = read_json(&root.join("derived").join("summary-14d.json"));
+    let summary = read_json(&root.join("derived").join("summary-21d.json"));
     let build = read_json(&root.join("derived").join("build-state.json"));
     let collector_log = tail(&root.join("collector.log"), 512 * 1024);
     let finance_log = tail(&root.join("finance-official.log"), 256 * 1024);
@@ -577,11 +577,11 @@ pub fn snapshot() -> Result<Value, String> {
             "rawRecords":state["totals"]["franceRecentRecords"].as_i64().unwrap_or(0),
             "rawFiles":state["totals"]["files"].as_i64().unwrap_or(0),
             "canonicalAll":build["crossPlatformTotal"].as_i64().unwrap_or(0),
-            "unique14d":summary["counts"]["independentJobsAfterCrossPlatformDedupe"].as_i64().unwrap_or(0),
-            "paris14d":summary["counts"]["parisJobs"].as_i64().unwrap_or(0),
-            "ileDeFrance14d":summary["counts"]["ileDeFranceJobs"].as_i64().unwrap_or(0),
-            "stage14d":stage,
-            "alternance14d":alternance,
+            "unique21d":summary["counts"]["independentJobsAfterCrossPlatformDedupe"].as_i64().unwrap_or(0),
+            "paris21d":summary["counts"]["parisJobs"].as_i64().unwrap_or(0),
+            "ileDeFrance21d":summary["counts"]["ileDeFranceJobs"].as_i64().unwrap_or(0),
+            "stage21d":stage,
+            "alternance21d":alternance,
             "financeOfficialCurrent":finance_recent_total(&finance),
             "duplicatePct":summary["duplicateRates"]["rawToFinalDuplicatePct"].as_f64().unwrap_or(0.0),
         },
@@ -661,6 +661,9 @@ mod tests {
         let value = snapshot().expect("read-only Onward snapshot");
         assert_eq!(value["available"], true);
         assert!(value["totals"]["canonicalAll"].as_i64().unwrap_or(0) > 1_000);
+        assert_eq!(value["coverage"]["windowDays"].as_i64(), Some(21));
+        assert!(value["totals"]["unique21d"].as_i64().unwrap_or(0) > 1_000);
+        assert!(value["totals"]["canonicalAll"].as_i64().unwrap_or(0) >= value["totals"]["unique21d"].as_i64().unwrap_or(0));
         let tasks = value["tasks"].as_array().expect("scheduled tasks");
         assert_eq!(tasks.len(), 4);
         assert!(tasks

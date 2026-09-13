@@ -10,7 +10,7 @@ Verified locally on 2026-09-13 against the installed per-user Agent Monitor and 
 - provider/source health (`success / running / waiting / failed`) for France Travail, SmartRecruiters, Greenhouse, Ashby, Lever, Workable, Arbeitnow and finance-official sources;
 - latest provider batch additions when the collector log exposes `saved N recent`;
 - recent Raw ingestion deltas and VPS `upsert / delete` deltas;
-- canonical/14-day totals, Paris/Île-de-France, Stage/Alternance, contract, industry and provider distributions;
+- canonical/all-history totals plus the current **21-day** market view for Paris/Île-de-France, Stage/Alternance, contract, industry and provider distributions;
 - 14 finance-official source cards, including BPCE/Natixis, BNP Paribas, Société Générale, Amundi, CACEIS, CA-CIB, AXA, Citi, HSBC, BlackRock, Arkéa, Ardian, Rothschild & Co and Tikehau Capital;
 - VPS search-index health based on the latest successful real import, scheduled-sync result/freshness, active job count and SQLite size.
 
@@ -28,7 +28,7 @@ Rust module `src-tauri/src/onward_jobs.rs` reads only:
 
 - `C:\dev\onward-job-data\state.json`;
 - `finance-official-state.json`;
-- `derived/summary-14d.json` and `derived/build-state.json`;
+- `derived/summary-21d.json` and `derived/build-state.json`;
 - bounded tails of collector/finance/build/sync logs;
 - the four fixed Task Scheduler entries through Windows Schedule.Service COM.
 
@@ -46,4 +46,4 @@ The Task Scheduler helper is a fixed PowerShell command launched with `CREATE_NO
 - Installed desktop browser acceptance: same-level **Onward 招聘** navigation opens the live dashboard with no console errors; the lower finance section also renders.
 - Installed 390×844 mobile/PWA viewport: **招聘** bottom-navigation entry opens the same live dashboard with no console errors.
 
-At verification time the real dashboard reported roughly 314k canonical indexed jobs, 237k unique jobs in the 14-day market view, 580 Stage, 7.2k Alternance, eight high-level source groups and 14 finance-official source cards. These are live observations, not hard-coded fixtures or stable market guarantees.
+The 2026-09-13 21-day migration keeps the observability boundary unchanged: the dashboard reads the new `summary-21d.json`, while `canonicalAll` continues to represent the retained all-history index. The first real 21-day Derived rebuild reported **314,269 retained canonical jobs**, **311,130 jobs in the 21-day market view**, **3,139 retained historical jobs outside that window**, **664 Stage**, **9,501 Alternance**, Paris **10,309**, and Île-de-France **40,178**. These are live observations, not hard-coded fixtures or stable market guarantees.
