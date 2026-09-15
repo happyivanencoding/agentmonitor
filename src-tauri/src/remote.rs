@@ -1,7 +1,7 @@
 //! Same-origin web/PWA service. Only Monitor metadata operations; no native command or file APIs.
 use crate::{
     access::{Access, Config},
-    api, onward_jobs, storage, Shared,
+    api, storage, Shared,
 };
 use serde_json::{json, Value};
 use std::{
@@ -192,7 +192,6 @@ fn handle(mut r: Request, state: &Shared, root: &Path, access: Option<&Access>) 
                     .unwrap_or(1);
                 api::analytics(state, days)
             }
-            "/api/onward-jobs" => onward_jobs::snapshot(),
             "/api/setup" => Ok(
                 json!({"version":env!("CARGO_PKG_VERSION"),"transport":"web","identity":identity,"publicUrl":access.map(|a|a.config.origin()),"hostName":std::env::var("COMPUTERNAME").unwrap_or_else(|_|"Home PC".into()),"webPort":PORT,"capabilities":{"monitor":true,"attribution":true,"agentControl":false,"nativeSettings":false}}),
             ),

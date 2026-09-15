@@ -2,7 +2,7 @@ import {invoke as nativeInvoke,isTauri} from '@tauri-apps/api/core';
 import {listen} from '@tauri-apps/api/event';
 import type {Snapshot} from './types';
 export const desktop=isTauri();
-export const APP_VERSION='0.5.7';
+export const APP_VERSION='0.5.8';
 
 async function request<T>(path:string,body?:unknown):Promise<T>{
  const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),12000);
@@ -21,7 +21,6 @@ export async function invoke<T=unknown>(command:string,args:Record<string,unknow
   case 'get_snapshot':return request<T>('/api/snapshot');
   case 'get_detail':return request<T>(`/api/detail?id=${encodeURIComponent(String(args.id||''))}`);
   case 'get_analytics':return request<T>(`/api/analytics?days=${Number(args.days)||1}`);
-  case 'get_onward_jobs':return request<T>('/api/onward-jobs');
   case 'get_setup_info':return request<T>('/api/setup');
   case 'bind_agent':return request<T>('/api/bind',args.input);
   case 'unbind_agent':return request<T>('/api/unbind',args);

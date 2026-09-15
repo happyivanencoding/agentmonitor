@@ -1,3 +1,11 @@
+## 2026-09-16 — Onward Control
+
+Version 0.5.8 retires the Onward recruitment dashboard from Agent Monitor. The React page, native `get_onward_jobs`, Rust job-data reader and `/api/onward-jobs` endpoint are removed. The standalone Onward Control Jobs module now owns that operating interface; local collection, SQLite authorities and sync tasks are unchanged.
+
+Agent Monitor returns to Runtime/Agent/process/task observability. It does not aggregate a market-data platform as an agent. Onward Control does not depend on Agent Monitor being open. See [migration notes](docs/ONWARD_CONTROL_MIGRATION.md). The actual private Control URL remains in deployment configuration; an illustrative URL is `https://projectos.example.com/onward/`.
+
+---
+
 # Agent Monitor — maintenance handoff
 
 Updated: 2026-09-09. Project root: `C:\dev\agent-monitor`. This is an independent project. No unrelated application project code was changed. AgentDock binaries/source were not modified; one user-level AgentDock Skill was installed under `~/.agentdock`.

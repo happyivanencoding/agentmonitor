@@ -2,25 +2,23 @@ import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {invoke,watchSnapshots,desktop,APP_VERSION} from './transport';
 import {RemoteSettings} from './RemoteSettings';
-import {OnwardJobsPage} from './OnwardJobsPage';
-import {Activity,LayoutDashboard,GanttChartSquare,Cpu,BarChart3,Settings2,ListChecks,BriefcaseBusiness,Monitor,ArrowUpRight,Check,Clock,AlertTriangle,Search,Sun,Moon,ChevronDown,ChevronRight,X,Link2,ExternalLink,Copy,FolderOpen,ShieldCheck,GitBranch,Command,Wifi,RefreshCw,CheckCircle2,Circle,Terminal,FileCode2,Zap,Download,Archive,ArchiveRestore} from 'lucide-react';
+import {Activity,LayoutDashboard,GanttChartSquare,Cpu,BarChart3,Settings2,ListChecks,Monitor,ArrowUpRight,Check,Clock,AlertTriangle,Search,Sun,Moon,ChevronDown,ChevronRight,X,Link2,ExternalLink,Copy,FolderOpen,ShieldCheck,GitBranch,Command,Wifi,RefreshCw,CheckCircle2,Circle,Terminal,FileCode2,Zap,Download,Archive,ArchiveRestore} from 'lucide-react';
 import type {Agent,Snapshot,Event,Detail,Task,MonitorTask,Analytics,Process,SourceHealth,ChatRequest} from './types';
 import './styles.css';
 import './mobile.css';
 
-type Page='overview'|'timeline'|'processes'|'usage'|'tasks'|'onward'|'settings';
+type Page='overview'|'timeline'|'processes'|'usage'|'tasks'|'settings';
 type Notify=(message:string)=>void;
-const nav=[['overview','工作总览',LayoutDashboard],['timeline','时间线',GanttChartSquare],['processes','系统进程',Cpu],['usage','用量与历史',BarChart3],['tasks','任务看板',ListChecks],['onward','Onward 招聘',BriefcaseBusiness],['settings','连接与设置',Settings2]] as const;
+const nav=[['overview','工作总览',LayoutDashboard],['timeline','时间线',GanttChartSquare],['processes','系统进程',Cpu],['usage','用量与历史',BarChart3],['tasks','任务看板',ListChecks],['settings','连接与设置',Settings2]] as const;
 const pageMeta:Record<Page,{eyebrow:string;description:string}>={
  overview:{eyebrow:'ALL YOUR AGENTS. ONE CLEAR PICTURE.',description:'谁发起了工作，正在做什么，哪里需要你留意。'},
  timeline:{eyebrow:'FOLLOW THE WORK, NOT THE SPINNER.',description:'把 conversation、ACP、turn 与工具活动放回同一条时间轴。'},
  processes:{eyebrow:'LOCAL OBSERVABILITY',description:'系统进程是运行载体，不是逻辑 Agent。'},
  usage:{eyebrow:'LOCAL OBSERVABILITY',description:'真实累计值与连续观测增量分开记账。'},
  tasks:{eyebrow:'GOALS OVER PROCESSES.',description:'按项目 → 对话 → 每条用户 Request 查看步骤、动态计划与真实执行。'},
- onward:{eyebrow:'JOB MARKET PIPELINE · LIVE',description:'监视 Onward 的法国岗位采集、去重、金融官方源与 VPS 搜索索引同步。'},
  settings:{eyebrow:'CONNECTED, NOT ASSUMED.',description:'只读采集、精确归属，以及清楚可见的能力边界。'},
 };
-const mobileNavLabel:Record<Page,string>={overview:'总览',timeline:'时间线',processes:'进程',usage:'用量',tasks:'任务',onward:'招聘',settings:'连接'};
+const mobileNavLabel:Record<Page,string>={overview:'总览',timeline:'时间线',processes:'进程',usage:'用量',tasks:'任务',settings:'连接'};
 const labels:Record<string,string>={RUNNING:'执行中',WAITING_MODEL:'等待模型',WAITING_TOOL:'工具运行中',WAITING_USER:'等待确认',IDLE:'空闲',COMPLETED:'已完成',FAILED:'失败',CRASHED:'进程已退出',SUSPECTED_STALLED:'疑似停滞',UNKNOWN:'未知'};
 const live=new Set(['RUNNING','WAITING_MODEL','WAITING_TOOL','WAITING_USER']);
 const activeTurn=(s?:string)=>['inProgress','in_progress','running','started'].includes(s||'');
@@ -77,7 +75,6 @@ function App(){
     {page==='processes'&&<ProcessPage processes={data.processes} agents={data.agents}/>}
     {page==='usage'&&<UsagePage snapshot={data} notify={setToast}/>}
     {page==='tasks'&&<><NativePlanWorklist tasks={nativePlans} now={now} all/><RequestWorklist requests={requests} agents={data.agents} now={now} onSelect={setSelected} taskPage/><TaskBoard monitorTasks={data.monitorTasks||[]} nativeTasks={data.tasks} agents={data.agents} now={now} onSelect={setSelected} reaper={data.sources?.autoStop}/></>}
-    {page==='onward'&&<OnwardJobsPage notify={setToast}/>}
     {page==='settings'&&(desktop?<SettingsPage snapshot={data} notify={setToast}/>:<RemoteSettings snapshot={data} notify={setToast}/>)}
     </>}
    </main>
